@@ -1,5 +1,8 @@
 from PySimpleGUI import PySimpleGUI as sg
 from DestravarPdf import destravar_pdf
+from InterpretePdf import extract_data_from_text
+import subprocess
+import traceback
 
 # Função para criar a caixa de diálogo com caixas de seleção
 def criar_caixa_selecao(titulo, opcoes):
@@ -112,5 +115,26 @@ while True:
         arquivo = sg.popup_get_file('Selecione o arquivo PDF:')
         if arquivo:
             senha = '515608'  # Senha fixa
-            destravar_pdf(arquivo, 'desbloqueado.pdf', senha)
-            sg.popup('PDF desbloqueado com sucesso')
+            try:
+                output_pdf = 'desbloqueado.pdf'
+                destravar_pdf(arquivo, output_pdf, senha)
+                
+                # Chamar o script Cache.py passando o arquivo PDF desbloqueado
+                subprocess.run(['python', 'Cache.py', output_pdf])
+                
+                # Extrair dados do rascunho.txt
+                extracted_data = extract_data_from_text('rascunho.txt')
+                
+                # Verificar o valor interno de data
+                # print("Dados extraídos:", extracted_data)
+                
+                # Escrever os dados extraídos no arquivo cache.txt
+                with open('cache.txt', 'w', encoding='utf-8') as output_file:
+                    for key, value in extracted_data.items():
+                        output_file.write(f"{key}: {value}\n")
+                
+                sg.popup("Dados extraídos e salvos em cache.txt com sucesso!")
+            except Exception as e:
+                print(f"Erro ao processar o PDF: {e}")
+                traceback.print_exc()
+                sg.popup(f"Erro ao processar o PDF: {e}")
