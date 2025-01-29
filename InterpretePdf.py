@@ -14,7 +14,8 @@ def extract_data_from_text(file_path):
 
         #Nome
         #CHECK
-        match = re.search(r"Nome\s*([A-Z\s]+)", text)
+
+        match = re.search(r"Nome:\s*([A-Z\s]+)(?=\s*CPF|$)", text)
         data["Nome"] = match.group(1).strip() if match else "ERROR"
         
         #Nascimento
@@ -29,7 +30,7 @@ def extract_data_from_text(file_path):
 
         #Sexo
         #CHECK
-        match = re.search(r"Sexo\s*([A-Z\s])", text)
+        match = re.search(r"Sexo\s*([A-Z\s\-])", text)
         data["Sexo"] = match.group(1) if match else "ERROR"
 
         #Rg
@@ -57,9 +58,9 @@ def extract_data_from_text(file_path):
 
         #Pai
         #CHECK
-        match = re.search(r"Nome do Pai\s*([A-Z\s]+)", text)
+        match = re.search(r"Nome do Pai\s*([A-Z\s\-]+)(?=\s*CPF|$)", text)
         data["Pai"] = match.group(1).strip() if match else "ERROR"
-
+        
         #Obito
         #CHECK
         match = re.search(r"Óbito\?\s*(\w+)", text)
@@ -70,9 +71,9 @@ def extract_data_from_text(file_path):
         #Renda Mensal Presumida
         #CHECK
         match = re.search(r"Renda Mensal Presumida\s*R\$\s*([\d\.,]+)", text)
-        data["Renda Mensal Presumida"] = match.group(1) if match else "ERROR"
+        data["Renda Mensal Presumida"] = match.group(1) if match else "-"
 
-        #HISTÓRICO RECEITA FEDERAL
+        #HISTÓRICO DA RECEITA FEDERAL
         
         #Situação Cadastral
         #CHECK
@@ -139,25 +140,29 @@ def extract_data_from_text(file_path):
 
         #Cns
         #CHECK
-        match = re.search(r"CNS\s*([\d]+)", text)
+        match = re.search(r"CNS\s*([\d\-]+)", text)
         data["Cns"] = match.group(1) if match else "ERROR"
 
         #Cns - outros
         #CHECK
-        match = re.search(r"CNS - Outros\s*([\d]+)", text)
+        match = re.search(r"CNS - Outros\s*([\d\-]+)", text)
         data["Cns - outros"] = match.group(1) if match else "ERROR"
 
         #Inscrição social
         #CHECK
-        match = re.search(r"Inscrição Social\s*([\w\s\-]*)", text)
-        data["Inscrição social"] = match.group(1) if match else "ERROR"
+        match = re.search(r"Inscrição Social\s*([\w\s\-]+)", text)
+        data["Inscrição social"] = match.group(1).strip() if match else "ERROR"
+        
+        match = re.search(r"Inscrição Social\s*([\w\s\-]+)(?=\s*Relatório de Pessoa Física|$)", text)
+        data["Inscrição social"] = match.group(1).strip() if match else "-"
 
+        
         #CELULARES E TELEFONES FIXO
         
         #Número
         #CHECK
         match = re.findall(r"\(\d{2}\) \d{4,5}-\d{4}", text)
-        data["Número"] = match if match else "ERROR"
+        data["Número"] = match if match else "-"
 
         #PAGAMENTOS DO BENEFÍCIO DE PRESTAÇÃO CONTINUADA
         
@@ -176,26 +181,26 @@ def extract_data_from_text(file_path):
         #Valor total recebido como beneficiário
         #CHECK
         match = re.search(r"Valor total recebido como\s*beneficiario\s*R\$\s*([\d,.]+)", text)
-        data["Valor total recebido como beneficiário"] = match.group(1) if match else "ERROR"
+        data["Valor total recebido como beneficiário"] = match.group(1) if match else "0"
         
         #Valor total recebido como responsável
         #CHECK
         match = re.search(r"Valor total recebido como\s*responsável\s*R\$\s*([\d,.]+)", text)
-        data["Valor total recebido como responsável"] = match.group(1) if match else "ERROR"
+        data["Valor total recebido como responsável"] = match.group(1) if match else "0"
         
         #Valor total recebido como benef./resp.
         #CHECK
         match = re.search(r"Valor total recebido como\s*benef./resp.\s*R\$\s*([\d,.]+)", text)
-        data["Valor total recebido como benef./resp."] = match.group(1) if match else "ERROR"
+        data["Valor total recebido como benef./resp."] = match.group(1) if match else "0"
 
         #Primeira ocorrência
         #CHECK
         match = re.search(r"Primeira ocorrência\s*([a-z]{3}/\d{4})", text)
-        data["Primeira ocorrência"] = match.group(1) if match else "ERROR"
+        data["Primeira ocorrência"] = match.group(1) if match else "-"
 
         #Última ocorrência
         #CHECK
         match = re.search(r"Última ocorrência\s*([a-z]{3}/\d{4})", text)
-        data["Última ocorrência"] = match.group(1) if match else "ERROR"
+        data["Última ocorrência"] = match.group(1) if match else "-"
 
     return data

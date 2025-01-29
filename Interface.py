@@ -1,17 +1,15 @@
 from PySimpleGUI import PySimpleGUI as sg
 from DestravarPdf import destravar_pdf
 from InterpretePdf import extract_data_from_text
-from InterpreteDocs import process_pdf
 import subprocess
 import traceback
 
 # Função para criar a caixa de diálogo com caixas de seleção
 def criar_caixa_selecao(titulo, opcoes):
     layout = [
-        [sg.Checkbox(opcao, key=opcao) for opcao in opcoes],
-        [sg.Button('OK')]
-    ]
-    janela = sg.Window(titulo, layout)
+        [sg.Checkbox(opcao, key=opcao, default=True)] for opcao in opcoes
+    ] + [[sg.Button('OK')]]
+    janela = sg.Window(titulo, layout, size=(500, 400))  # Define a largura e altura da janela
     evento, valores = janela.read()
     janela.close()
     return valores
@@ -43,16 +41,11 @@ layout = [
     [
         sg.Column(
             [
-                [
-                    sg.Button(
-                        'Dados para Entrada',
-                        size=(20, 2)
-                    ),
-                    sg.Button(
-                        'Dados para Saída',
-                        size=(20, 2)
-                    )
-                ]
+                [sg.Button(
+                    'Personalizar Layout do Pdf',
+                    size=(20, 2),
+                    key='Personalizar'
+                )]
             ],
             justification='center',
             element_justification='center',
@@ -99,19 +92,33 @@ janela = sg.Window(
     size=(800, 400)
 )
 
+# Variáveis para armazenar as opções de personalização
+usar_marca_dagua = True
+grupos_selecionados = {
+    "CADASTROS BÁSICOS": True,
+    "RENDA": True,
+    "HISTÓRICO DA RECEITA FEDERAL": True,
+    "DADOS DA CTPS": True,
+    "TITULO ELEITORAL": True,
+    "DADOS DO PASSAPORTE": True,
+    "DADOS SOCIAIS": True,
+    "CELULARES E TELEFONES FIXO": True,
+    "PAGAMENTOS DO BENEFÍCIO DE PRESTAÇÃO CONTINUADA": True,
+    "AUXÍLIO EMERGENCIAL": True
+}
+
 # Ler os eventos
 while True:
     evento, valores = janela.read()
     if evento == sg.WIN_CLOSED:
         break
-    elif evento == 'Dados para Entrada':
-        opcoes = ['Opção 1', 'Opção 2', 'Opção 3']  # Substitua com suas opções
-        selecoes = criar_caixa_selecao('Selecionar Opções para Interpretação', opcoes)
-        print('Seleções para Interpretação:', selecoes)
-    elif evento == 'Dados para Saída':
-        opcoes = ['Opção A', 'Opção B', 'Opção C']  # Substitua com suas opções
-        selecoes = criar_caixa_selecao('Selecionar Opções para Impressão', opcoes)
-        print('Seleções para Impressão:', selecoes)
+    elif evento == 'Personalizar':
+        opcoes = ['Usar Marca d\'água'] + list(grupos_selecionados.keys())  # Opções para marca d'água e grupos de dados
+        selecoes = criar_caixa_selecao('Personalizar Layout do Pdf', opcoes)
+        usar_marca_dagua = selecoes.get('Usar Marca d\'água', True)
+        for grupo in grupos_selecionados.keys():
+            grupos_selecionados[grupo] = selecoes.get(grupo, True)
+        print('Opções de Personalização:', selecoes)
     elif evento == 'Selecionar Arquivo':
         arquivo = sg.popup_get_file('Selecione o arquivo PDF:')
         if arquivo:
@@ -124,12 +131,9 @@ while True:
                 with open('desbloqueado.pdf', 'wb') as f:
                     f.write(output_pdf.getbuffer())
                 
-                # Chamar o script Cache.py passando o arquivo PDF desbloqueado
-                subprocess.run(['python', 'Cache.py', 'desbloqueado.pdf'], check=True)
-                
-                # Chamar a função process_pdf de InterpreteDocs.py
-                process_pdf('desbloqueado.pdf')
-                
+                # Chamar o script Cache.py passando o arquivo PDF desbloqueado e as opções de personalização
+                subprocess.run(['python', 'Cache.py', 'desbloqueado.pdf', str(usar_marca_dagua)] + [str(grupos_selecionados[grupo]) for grupo in grupos_selecionados], check=True)
+                  
                 # Extrair dados do temp.txt
                 extracted_data = extract_data_from_text('temp.txt')
                 
