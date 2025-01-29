@@ -1,5 +1,6 @@
 import PyPDF2
 import sys
+import os
 
 # Verifica se o nome do arquivo foi passado como argumento
 if len(sys.argv) < 2:
@@ -13,8 +14,8 @@ with open(input_pdf, 'rb') as file:
     reader = PyPDF2.PdfReader(file)
     num_pages = len(reader.pages)
 
-    # Abre o arquivo de saída
-    with open('rascunho.txt', 'w', encoding='utf-8') as output_file:
+    # Cria o arquivo de saída
+    with open('temp.txt', 'w', encoding='utf-8') as output_file:
         # Extrai o texto de cada página e escreve no arquivo de saída
         for page_num in range(num_pages):
             page = reader.pages[page_num]

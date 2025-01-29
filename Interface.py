@@ -1,6 +1,7 @@
 from PySimpleGUI import PySimpleGUI as sg
 from DestravarPdf import destravar_pdf
 from InterpretePdf import extract_data_from_text
+from InterpreteDocs import process_pdf
 import subprocess
 import traceback
 
@@ -116,14 +117,21 @@ while True:
         if arquivo:
             senha = '515608'  # Senha fixa
             try:
-                output_pdf = 'desbloqueado.pdf'
-                destravar_pdf(arquivo, output_pdf, senha)
+                # Destravar o PDF e obter o conteúdo desbloqueado como BytesIO
+                output_pdf = destravar_pdf(arquivo, senha)
+                
+                # Salvar o conteúdo desbloqueado em um arquivo temporário
+                with open('desbloqueado.pdf', 'wb') as f:
+                    f.write(output_pdf.getbuffer())
                 
                 # Chamar o script Cache.py passando o arquivo PDF desbloqueado
-                subprocess.run(['python', 'Cache.py', output_pdf])
+                subprocess.run(['python', 'Cache.py', 'desbloqueado.pdf'], check=True)
                 
-                # Extrair dados do rascunho.txt
-                extracted_data = extract_data_from_text('rascunho.txt')
+                # Chamar a função process_pdf de InterpreteDocs.py
+                process_pdf('desbloqueado.pdf')
+                
+                # Extrair dados do temp.txt
+                extracted_data = extract_data_from_text('temp.txt')
                 
                 # Verificar o valor interno de data
                 # print("Dados extraídos:", extracted_data)
@@ -133,7 +141,7 @@ while True:
                     for key, value in extracted_data.items():
                         output_file.write(f"{key}: {value}\n")
                 
-                sg.popup("Dados extraídos e salvos em cache.txt com sucesso!")
+                sg.popup("Dados extraídos com sucesso!")
             except Exception as e:
                 print(f"Erro ao processar o PDF: {e}")
                 traceback.print_exc()

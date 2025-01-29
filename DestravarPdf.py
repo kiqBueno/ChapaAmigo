@@ -1,6 +1,7 @@
 from PyPDF2 import PdfReader, PdfWriter
+from io import BytesIO
 
-def destravar_pdf(input_pdf, output_pdf, senha='515608'):
+def destravar_pdf(input_pdf, senha='515608'):
     try:
         # Carregar e desbloquear o PDF
         reader = PdfReader(input_pdf)
@@ -11,9 +12,12 @@ def destravar_pdf(input_pdf, output_pdf, senha='515608'):
         for page in reader.pages:
             writer.add_page(page)
 
-        with open(output_pdf, "wb") as f:
-            writer.write(f)
+        # Salvar o PDF desbloqueado em um objeto BytesIO
+        output_pdf = BytesIO()
+        writer.write(output_pdf)
+        output_pdf.seek(0)  # Voltar ao início do BytesIO
 
-        print(f"Arquivo desbloqueado salvo como: {output_pdf}")
+        print("PDF desbloqueado com sucesso")
+        return output_pdf
     except Exception as e:
         raise Exception(f"Falha ao desbloquear o PDF: {e}")
