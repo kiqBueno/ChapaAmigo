@@ -1,8 +1,11 @@
+# filepath: /c:/Users/Pornelius Hubert/Documents/GitHub/ChapaAmigo/Interface.py
 from PySimpleGUI import PySimpleGUI as sg
 from DestravarPdf import destravar_pdf
 from InterpretePdf import extract_data_from_text
 import subprocess
 import traceback
+import os
+import sys
 
 # Função para criar a caixa de diálogo com caixas de seleção
 def criar_caixa_selecao(titulo, opcoes):
@@ -45,6 +48,11 @@ layout = [
                     'Personalizar Layout do Pdf',
                     size=(20, 2),
                     key='Personalizar'
+                ),
+                sg.Button(
+                    'Inserir Foto',
+                    size=(20, 2),
+                    key='InserirFoto'
                 )]
             ],
             justification='center',
@@ -106,6 +114,7 @@ grupos_selecionados = {
     "PAGAMENTOS DO BENEFÍCIO DE PRESTAÇÃO CONTINUADA": True,
     "AUXÍLIO EMERGENCIAL": True
 }
+foto_path = None
 
 # Ler os eventos
 while True:
@@ -119,6 +128,10 @@ while True:
         for grupo in grupos_selecionados.keys():
             grupos_selecionados[grupo] = selecoes.get(grupo, True)
         print('Opções de Personalização:', selecoes)
+    elif evento == 'InserirFoto':
+        foto_path = sg.popup_get_file('Selecione a imagem:')
+        if foto_path:
+            print(f"Imagem selecionada: {foto_path}")
     elif evento == 'Selecionar Arquivo':
         arquivo = sg.popup_get_file('Selecione o arquivo PDF:')
         if arquivo:
@@ -132,20 +145,24 @@ while True:
                     f.write(output_pdf.getbuffer())
                 
                 # Chamar o script Cache.py passando o arquivo PDF desbloqueado e as opções de personalização
-                subprocess.run(['python', 'Cache.py', 'desbloqueado.pdf', str(usar_marca_dagua)] + [str(grupos_selecionados[grupo]) for grupo in grupos_selecionados], check=True)
+                cache_script_path = os.path.join(os.path.dirname(__file__), 'Cache.py')
+                subprocess.run([sys.executable, cache_script_path, 'desbloqueado.pdf', str(usar_marca_dagua), foto_path or ""] + [str(grupos_selecionados[grupo]) for grupo in grupos_selecionados], check=True)
                   
                 # Extrair dados do temp.txt
                 extracted_data = extract_data_from_text('temp.txt')
-                
-                # Verificar o valor interno de data
-                # print("Dados extraídos:", extracted_data)
                 
                 # Escrever os dados extraídos no arquivo cache.txt
                 with open('cache.txt', 'w', encoding='utf-8') as output_file:
                     for key, value in extracted_data.items():
                         output_file.write(f"{key}: {value}\n")
                 
-                sg.popup("Dados extraídos com sucesso!")
+                # Nome do arquivo específico e senha
+                nome_pessoa = extracted_data.get("Nome", "Relatorio").replace(" ", "_")
+                output_pdf_path = f"Relatorio_{nome_pessoa}.pdf"
+                
+                # Exibir mensagem de confirmação
+                sg.popup(f"PDF protegido gerado: {output_pdf_path} com senha: 1234")
+                
             except Exception as e:
                 print(f"Erro ao processar o PDF: {e}")
                 traceback.print_exc()
