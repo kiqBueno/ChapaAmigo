@@ -43,26 +43,17 @@ def save_specific_pages_as_images(pdf_path, senha_pdf):
     doc = fitz.open(pdf_path)
     if doc.needs_pass:
         doc.authenticate(senha_pdf)
-    keywords = [
-        "Comprovante de Situação Cadastral no CPF",
-        "Sistema Nacional de Informações Criminais",
-        "Portal do BNMP"
-    ]
-    
+    keywords = ["Comprovante de Situação Cadastral no CPF", "Sistema Nacional de Informações Criminais", "Portal do BNMP"]
     images = []
-    
     for page_num in range(len(doc)):
         page = doc.load_page(page_num)
         text = page.get_text()
-        
         for keyword in keywords:
             if keyword in text:
-                # Aumentar a resolução da imagem especificando uma DPI maior
                 pix = page.get_pixmap(dpi=300)
                 img_bytes = BytesIO(pix.tobytes())
                 images.append(img_bytes)
                 print(f"Saved page {page_num + 1} as image in memory")
-
     return images
 
 # Função para cortar 10% das imagens em cima e em baixo
@@ -94,17 +85,13 @@ def add_transparency(image_path, transparency):
 def create_pdf(data, output_pdf_path, images, usar_marca_dagua=True, foto_path=None):
     c = canvas.Canvas(output_pdf_path, pagesize=letter)
     width, height = letter
-    
-    # Register Calibri and Calibri-Bold fonts
     pdfmetrics.registerFont(TTFont('Calibri', 'calibri.ttf'))
     pdfmetrics.registerFont(TTFont('Calibri-Bold', 'calibrib.ttf'))
     c.setFont("Calibri", 12)
-    
     y = height - 40
 
     def draw_group(title, keys):
         nonlocal y
-        # Espaçamento antes do nome do grupo
         y -= 20
         c.drawString(40, y, title)
         y -= 20
@@ -114,64 +101,39 @@ def create_pdf(data, output_pdf_path, images, usar_marca_dagua=True, foto_path=N
                 c.drawString(60, y, f"{key}:")
                 c.setFont("Calibri", 12)
                 text_width = c.stringWidth(f"{key}: ", "Helvetica-Bold", 12)
-                c.drawString(60 + text_width + 10, y, f"{data[key]}")  # Espaçamento dinâmico antes do dado
+                c.drawString(60 + text_width + 10, y, f"{data[key]}")
                 y -= 20
                 if y < 40:
                     c.showPage()
                     c.setFont("Calibri", 12)
                     y = height - 40
-        # Espaçamento após o nome do grupo
         y -= 20
 
-    # Adicionar marca d'água em cada página
     def add_watermark():
         if usar_marca_dagua:
-            # Adicionar marca d'água LogoChapaAmigo.png centralizada e aumentada
             c.saveState()
             c.translate(width / 2, height / 2)
-            c.rotate(45)  # Rotacionar a imagem 45 graus
-            logo_img_bytes = add_transparency(os.path.join(os.path.dirname(__file__), 'Files', 'LogoChapaAmigo.png'), 0.05)  # 100% de transparência
+            c.rotate(45)
+            logo_img_bytes = add_transparency(os.path.join(os.path.dirname(__file__), 'Files', 'LogoChapaAmigo.png'), 0.05)
             img = ImageReader(logo_img_bytes)
-            c.drawImage(img, -250, -125, width=500, height=250, mask='auto')  # Centralizar a imagem
+            c.drawImage(img, -250, -125, width=500, height=250, mask='auto')
             c.restoreState()
 
-    # Adicionar foto no topo direito da primeira página
     if foto_path:
         img = ImageReader(foto_path)
         c.drawImage(img, width - 150, height - 200, width=100, height=150)
 
-    # Grupos de dados
     groups = {
-        "CADASTROS BÁSICOS": [
-            "Data e Hora", "Nome", "Nascimento", "Idade", "Sexo", "Rg", "Cpf", "CNH", "Mãe", "Pai", "Óbito", "Endereços"
-        ],
-        "RENDA": [
-            "Renda Mensal Presumida"
-        ],
-        "HISTÓRICO DA RECEITA FEDERAL": [
-            "Situação Cadastral", "Inscrito em", "Última Consulta"
-        ],
-        "DADOS DA CTPS": [
-            "CTPS", "Série"
-        ],
-        "TITULO ELEITORAL": [
-            "Título de eleitor"
-        ],
-        "DADOS DO PASSAPORTE": [
-            "Passaporte", "País", "Validade"
-        ],
-        "DADOS SOCIAIS": [
-            "Nis (pis/pasep)", "Nis - outros", "Cns", "Cns - outros", "Inscrição social"
-        ],
-        "CELULARES E TELEFONES FIXO": [
-            "Número"
-        ],
-        "PAGAMENTOS DO BENEFÍCIO DE PRESTAÇÃO CONTINUADA": [
-            "Quantidade de Pagamentos", "Valor Total dos Pagamentos"
-        ],
-        "AUXÍLIO EMERGENCIAL": [
-            "Valor total recebido como beneficiário", "Valor total recebido como responsável", "Valor total recebido como benef./resp."
-        ]
+        "CADASTROS BÁSICOS": ["Data e Hora", "Nome", "Nascimento", "Idade", "Sexo", "Rg", "Cpf", "CNH", "Mãe", "Pai", "Óbito", "Endereços"],
+        "RENDA": ["Renda Mensal Presumida"],
+        "HISTÓRICO DA RECEITA FEDERAL": ["Situação Cadastral", "Inscrito em", "Última Consulta"],
+        "DADOS DA CTPS": ["CTPS", "Série"],
+        "TITULO ELEITORAL": ["Título de eleitor"],
+        "DADOS DO PASSAPORTE": ["Passaporte", "País", "Validade"],
+        "DADOS SOCIAIS": ["Nis (pis/pasep)", "Nis - outros", "Cns", "Cns - outros", "Inscrição social"],
+        "CELULARES E TELEFONES FIXO": ["Número"],
+        "PAGAMENTOS DO BENEFÍCIO DE PRESTAÇÃO CONTINUADA": ["Quantidade de Pagamentos", "Valor Total dos Pagamentos"],
+        "AUXÍLIO EMERGENCIAL": ["Valor total recebido como beneficiário", "Valor total recebido como responsável", "Valor total recebido como benef./resp."]
     }
 
     for group_title, group_keys in groups.items():
@@ -179,7 +141,6 @@ def create_pdf(data, output_pdf_path, images, usar_marca_dagua=True, foto_path=N
             add_watermark()
             draw_group(group_title, group_keys)
 
-    # Adicionar imagens ao PDF
     if incluir_documentos:
         for img_bytes in images:
             c.showPage()
@@ -221,40 +182,24 @@ if incluir_contrato:
         termo_reader = PyPDF2.PdfReader(termo_file)
         output_reader = PyPDF2.PdfReader(output_file)
         writer = PyPDF2.PdfWriter()
-
-        # Definir as variáveis width e height
         width, height = letter
-
-        # Ajustar o tamanho da primeira página concatenada
         termo_page = termo_reader.pages[0]
         termo_page.scale_to(width, height)
         writer.add_page(termo_page)
-
-        # Adicionar páginas restantes do termo
         for page in termo_reader.pages[1:]:
             writer.add_page(page)
-
-        # Adicionar páginas do relatório
         for page in output_reader.pages:
             writer.add_page(page)
-
-        # Definir a senha do PDF
         writer.encrypt(user_password="1234", owner_password="1234", use_128bit=True)
-
         with open(output_pdf_path, 'wb') as final_output_file:
             writer.write(final_output_file)
 else:
-    # Se não incluir contrato, apenas adicionar a senha ao PDF gerado
     with open(output_pdf_path, 'rb') as output_file:
         output_reader = PyPDF2.PdfReader(output_file)
         writer = PyPDF2.PdfWriter()
-
         for page in output_reader.pages:
             writer.add_page(page)
-
-        # Definir a senha do PDF
         writer.encrypt(user_password="1234", owner_password="1234", use_128bit=True)
-
         with open(output_pdf_path, 'wb') as final_output_file:
             writer.write(final_output_file)
 

@@ -10,10 +10,8 @@ import encodings
 
 # Função para criar a caixa de diálogo com caixas de seleção
 def criar_caixa_selecao(titulo, opcoes):
-    layout = [
-        [sg.Checkbox(opcao, key=opcao, default=True)] for opcao in opcoes
-    ] + [[sg.Button('OK')]]
-    janela = sg.Window(titulo, layout, size=(450, 450))  # Define a largura e altura da janela
+    layout = [[sg.Checkbox(opcao, key=opcao, default=True)] for opcao in opcoes] + [[sg.Button('OK')]]
+    janela = sg.Window(titulo, layout, size=(450, 450))
     evento, valores = janela.read()
     janela.close()
     return valores
@@ -22,84 +20,34 @@ def criar_caixa_selecao(titulo, opcoes):
 sg.theme('BlueMono')
 layout = [
     [
-        sg.Image(
-            filename=os.path.join(os.path.dirname(__file__), 'Files', 'LogoChapaAmigo.png'),
-            subsample=5
-        ),
-        sg.Column(
-            [
-                [
-                    sg.Text(
-                        'Raspagem de Pdf',
-                        justification='right',
-                        font=('Helvetica', 15)
-                    )
-                ]
-            ],
-            justification='right',
-            element_justification='right',
-            expand_x=True
-        )
+        sg.Image(filename=os.path.join(os.path.dirname(__file__), 'Files', 'LogoChapaAmigo.png'), subsample=5),
+        sg.Column([[sg.Text('Raspagem de Pdf', justification='right', font=('Helvetica', 15))]], justification='right', element_justification='right', expand_x=True)
     ],
-    [sg.VPush()],  # Espaçamento vertical
+    [sg.VPush()],
     [
         sg.Column(
             [
-                [sg.Button(
-                    'Personalizar Layout do Pdf',
-                    size=(20, 2),
-                    key='Personalizar'
-                ),
-                sg.Button(
-                    'Inserir Foto',
-                    size=(20, 2),
-                    key='InserirFoto'
-                )]
+                [sg.Button('Personalizar Layout do Pdf', size=(20, 2), key='Personalizar')],
+                [sg.Button('Inserir Foto', size=(20, 2), key='InserirFoto')]
             ],
-            justification='center',
-            element_justification='center',
-            expand_x=True
+            justification='center', element_justification='center', expand_x=True
         )
     ],
-    [sg.Text('', size=(1, 1))],  # Espaçamento vertical reduzido pela metade
+    [sg.Text('', size=(1, 1))],
     [
         sg.Column(
-            [
-                [
-                    sg.Button(
-                        'Selecionar Arquivo',
-                        size=(30, 2),
-                        font=('Helvetica', 25),
-                        border_width=2
-                    )
-                ]
-            ],
-            justification='center',
-            element_justification='center',
-            expand_x=True,
+            [[sg.Button('Selecionar Arquivo', size=(30, 2), font=('Helvetica', 25), border_width=2)]],
+            justification='center', element_justification='center', expand_x=True
         )
     ],
-    [sg.VPush()],  # Espaçamento vertical
+    [sg.VPush()],
     [
-        sg.Column(
-            [
-                [
-                    sg.Text('Versão: ' + '1.0')
-                ]
-            ],
-            justification='center',
-            element_justification='center',
-            expand_x=True
-        )
+        sg.Column([[sg.Text('Versão: 1.0')]], justification='center', element_justification='center', expand_x=True)
     ]
 ]
 
 # Janela
-janela = sg.Window(
-    'Raspagem de Pdf',
-    layout,
-    size=(800, 400)
-)
+janela = sg.Window('Raspagem de Pdf', layout, size=(800, 400))
 
 # Variáveis para armazenar as opções de personalização
 usar_marca_dagua = True
@@ -125,7 +73,7 @@ while True:
     if evento == sg.WIN_CLOSED:
         break
     elif evento == 'Personalizar':
-        opcoes = ['Usar Marca d\'água', 'Contrato', 'Documentos'] + list(grupos_selecionados.keys())  # Opções para marca d'água, contrato, documentos e grupos de dados
+        opcoes = ['Usar Marca d\'água', 'Contrato', 'Documentos'] + list(grupos_selecionados.keys())
         selecoes = criar_caixa_selecao('Personalizar Layout do Pdf', opcoes)
         usar_marca_dagua = selecoes.get('Usar Marca d\'água', True)
         incluir_contrato = selecoes.get('Contrato', True)
@@ -140,27 +88,17 @@ while True:
     elif evento == 'Selecionar Arquivo':
         arquivo = sg.popup_get_file('Selecione o arquivo PDF:')
         if arquivo:
-            senha = '515608'  # Senha fixa
+            senha = '515608'
             try:
-                # Chamar o script Cache.py passando o arquivo PDF original e as opções de personalização
                 cache_script_path = os.path.join(os.path.dirname(__file__), 'Cache.py')
                 subprocess.run([sys.executable, cache_script_path, arquivo, senha, str(usar_marca_dagua), foto_path or "", str(incluir_contrato), str(incluir_documentos)] + [str(grupos_selecionados[grupo]) for grupo in grupos_selecionados], check=True)
-                  
-                # Extrair dados do temp.txt
                 extracted_data = extract_data_from_text('temp.txt')
-                
-                # Escrever os dados extraídos no arquivo cache.txt
                 with open('cache.txt', 'w', encoding='utf-8') as output_file:
                     for key, value in extracted_data.items():
                         output_file.write(f"{key}: {value}\n")
-                
-                # Nome do arquivo específico e senha
                 nome_pessoa = extracted_data.get("Nome", "Relatorio").replace(" ", "_")
                 output_pdf_path = f"Relatorio_{nome_pessoa}.pdf"
-                
-                # Exibir mensagem de confirmação
                 sg.popup(f"PDF protegido gerado: {output_pdf_path} com senha: 1234")
-                
             except Exception as e:
                 print(f"Erro ao processar o PDF: {e}")
                 traceback.print_exc()
