@@ -27,8 +27,8 @@ layout = [
     [
         sg.Column(
             [
-                [sg.Button('Personalizar Layout do Pdf', size=(20, 2), key='Personalizar')],
-                [sg.Button('Inserir Foto', size=(20, 2), key='InserirFoto')]
+                [sg.Button('Personalizar Layout do Pdf', size=(20, 2), key='Personalizar'),
+                 sg.Button('Inserir Foto', size=(20, 2), key='InserirFoto')]
             ],
             justification='center', element_justification='center', expand_x=True
         )
@@ -82,7 +82,7 @@ while True:
             grupos_selecionados[grupo] = selecoes.get(grupo, True)
         print('Opções de Personalização:', selecoes)
     elif evento == 'InserirFoto':
-        foto_path = sg.popup_get_file('Selecione a imagem:')
+        foto_path = sg.popup_get_file('Selecione a imagem:', file_types=(("Image Files", "*.png;*.jpg;*.jpeg;*.bmp;*.gif"),))
         if foto_path:
             print(f"Imagem selecionada: {foto_path}")
     elif evento == 'Selecionar Arquivo':
@@ -92,8 +92,8 @@ while True:
             try:
                 cache_script_path = os.path.join(os.path.dirname(__file__), 'Cache.py')
                 subprocess.run([sys.executable, cache_script_path, arquivo, senha, str(usar_marca_dagua), foto_path or "", str(incluir_contrato), str(incluir_documentos)] + [str(grupos_selecionados[grupo]) for grupo in grupos_selecionados], check=True)
-                extracted_data = extract_data_from_text('temp.txt')
-                with open('cache.txt', 'w', encoding='utf-8') as output_file:
+                extracted_data = extract_data_from_text(os.path.join(os.path.dirname(__file__), 'Files', 'temp.txt'))
+                with open(os.path.join(os.path.dirname(__file__), 'Files', 'cache.txt'), 'w', encoding='utf-8') as output_file:
                     for key, value in extracted_data.items():
                         output_file.write(f"{key}: {value}\n")
                 nome_pessoa = extracted_data.get("Nome", "Relatorio").replace(" ", "_")

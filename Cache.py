@@ -101,12 +101,27 @@ def create_pdf(data, output_pdf_path, images, usar_marca_dagua=True, foto_path=N
                 c.drawString(60, y, f"{key}:")
                 c.setFont("Calibri", 12)
                 text_width = c.stringWidth(f"{key}: ", "Helvetica-Bold", 12)
-                c.drawString(60 + text_width + 10, y, f"{data[key]}")
-                y -= 20
-                if y < 40:
-                    c.showPage()
-                    c.setFont("Calibri", 12)
-                    y = height - 40
+                text = data[key]
+                if isinstance(text, list):
+                    text = " ".join(text)
+                lines = []
+                while text:
+                    if c.stringWidth(text, "Calibri", 12) <= width - 80 - text_width:
+                        lines.append(text)
+                        break
+                    else:
+                        for i in range(len(text), 0, -1):
+                            if c.stringWidth(text[:i], "Calibri", 12) <= width - 80 - text_width:
+                                lines.append(text[:i])
+                                text = text[i:].lstrip()
+                                break
+                for line in lines:
+                    c.drawString(60 + text_width + 10, y, line)
+                    y -= 20
+                    if y < 40:
+                        c.showPage()
+                        c.setFont("Calibri", 12)
+                        y = height - 40
         y -= 20
 
     def add_watermark():
@@ -120,8 +135,11 @@ def create_pdf(data, output_pdf_path, images, usar_marca_dagua=True, foto_path=N
             c.restoreState()
 
     if foto_path:
-        img = ImageReader(foto_path)
-        c.drawImage(img, width - 150, height - 200, width=100, height=150)
+        try:
+            img = ImageReader(foto_path)
+            c.drawImage(img, width - 150, height - 200, width=100, height=150)
+        except Exception as e:
+            print(f"Erro ao carregar a imagem: {e}")
 
     groups = {
         "CADASTROS BÁSICOS": ["Data e Hora", "Nome", "Nascimento", "Idade", "Sexo", "Rg", "Cpf", "CNH", "Mãe", "Pai", "Óbito", "Endereços"],
@@ -158,7 +176,7 @@ with open(input_pdf, 'rb') as file:
     num_pages = len(reader.pages)
 
     # Extrai o texto de cada página e escreve no arquivo de saída
-    with open('temp.txt', 'w', encoding='utf-8') as output_file:
+    with open(os.path.join(os.path.dirname(__file__), 'Files', 'temp.txt'), 'w', encoding='utf-8') as output_file:
         for page_num in range(num_pages):
             page = reader.pages[page_num]
             text = page.extract_text()
@@ -166,7 +184,7 @@ with open(input_pdf, 'rb') as file:
 
 # Extrair dados do temp.txt
 from InterpretePdf import extract_data_from_text
-extracted_data = extract_data_from_text('temp.txt')
+extracted_data = extract_data_from_text(os.path.join(os.path.dirname(__file__), 'Files', 'temp.txt'))
 
 # Criar o PDF com nome específico e senha
 nome_pessoa = extracted_data.get("Nome", "Relatorio").replace(" ", "_")
