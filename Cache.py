@@ -9,31 +9,40 @@ from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen.canvas import Canvas
 from reportlab.lib.colors import Color
 from PIL import Image
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfbase import pdfmetrics
+import encodings
 
 # Verifica se o nome do arquivo foi passado como argumento
-if len(sys.argv) < 14:
-    print("Uso: python Cache.py <arquivo_pdf> <usar_marca_dagua> <foto_path> <grupos_selecionados>")
+if len(sys.argv) < 17:
+    print("Uso: python Cache.py <arquivo_pdf> <senha_pdf> <usar_marca_dagua> <foto_path> <incluir_contrato> <incluir_documentos> <CADASTROS BÁSICOS> <RENDA> <HISTÓRICO DA RECEITA FEDERAL> <DADOS DA CTPS> <TITULO ELEITORAL> <DADOS DO PASSAPORTE> <DADOS SOCIAIS> <CELULARES E TELEFONES FIXO> <PAGAMENTOS DO BENEFÍCIO DE PRESTAÇÃO CONTINUada> <AUXÍLIO EMERGENCIAL>")
     sys.exit(1)
 
 input_pdf = sys.argv[1]
-usar_marca_dagua = sys.argv[2].lower() == 'true'
-foto_path = sys.argv[3] if sys.argv[3] else None
+senha_pdf = sys.argv[2]
+usar_marca_dagua = sys.argv[3].lower() == 'true'
+foto_path = sys.argv[4] if sys.argv[4] else None
+incluir_contrato = sys.argv[5].lower() == 'true'
+incluir_documentos = sys.argv[6].lower() == 'true'
+
 grupos_selecionados = {
-    "CADASTROS BÁSICOS": sys.argv[4].lower() == 'true',
-    "RENDA": sys.argv[5].lower() == 'true',
-    "HISTÓRICO DA RECEITA FEDERAL": sys.argv[6].lower() == 'true',
-    "DADOS DA CTPS": sys.argv[7].lower() == 'true',
-    "TITULO ELEITORAL": sys.argv[8].lower() == 'true',
-    "DADOS DO PASSAPORTE": sys.argv[9].lower() == 'true',
-    "DADOS SOCIAIS": sys.argv[10].lower() == 'true',
-    "CELULARES E TELEFONES FIXO": sys.argv[11].lower() == 'true',
-    "PAGAMENTOS DO BENEFÍCIO DE PRESTAÇÃO CONTINUADA": sys.argv[12].lower() == 'true',
-    "AUXÍLIO EMERGENCIAL": sys.argv[13].lower() == 'true'
+    "CADASTROS BÁSICOS": sys.argv[7].lower() == 'true',
+    "RENDA": sys.argv[8].lower() == 'true',
+    "HISTÓRICO DA RECEITA FEDERAL": sys.argv[9].lower() == 'true',
+    "DADOS DA CTPS": sys.argv[10].lower() == 'true',
+    "TITULO ELEITORAL": sys.argv[11].lower() == 'true',
+    "DADOS DO PASSAPORTE": sys.argv[12].lower() == 'true',
+    "DADOS SOCIAIS": sys.argv[13].lower() == 'true',
+    "CELULARES E TELEFONES FIXO": sys.argv[14].lower() == 'true',
+    "PAGAMENTOS DO BENEFÍCIO DE PRESTAÇÃO CONTINUADA": sys.argv[15].lower() == 'true',
+    "AUXÍLIO EMERGENCIAL": sys.argv[16].lower() == 'true',
 }
 
 # Função para identificar páginas específicas e salvar como imagem
-def save_specific_pages_as_images(pdf_path):
+def save_specific_pages_as_images(pdf_path, senha_pdf):
     doc = fitz.open(pdf_path)
+    if doc.needs_pass:
+        doc.authenticate(senha_pdf)
     keywords = [
         "Comprovante de Situação Cadastral no CPF",
         "Sistema Nacional de Informações Criminais",
@@ -68,7 +77,7 @@ def crop_image(img_bytes):
     return cropped_img_bytes
 
 # Salvar páginas específicas como imagens
-images = save_specific_pages_as_images(input_pdf)
+images = save_specific_pages_as_images(input_pdf, senha_pdf)
 
 # Função para adicionar transparência à imagem
 def add_transparency(image_path, transparency):
@@ -85,7 +94,11 @@ def add_transparency(image_path, transparency):
 def create_pdf(data, output_pdf_path, images, usar_marca_dagua=True, foto_path=None):
     c = canvas.Canvas(output_pdf_path, pagesize=letter)
     width, height = letter
-    c.setFont("Helvetica", 12)
+    
+    # Register Calibri and Calibri-Bold fonts
+    pdfmetrics.registerFont(TTFont('Calibri', 'calibri.ttf'))
+    pdfmetrics.registerFont(TTFont('Calibri-Bold', 'calibrib.ttf'))
+    c.setFont("Calibri", 12)
     
     y = height - 40
 
@@ -97,15 +110,15 @@ def create_pdf(data, output_pdf_path, images, usar_marca_dagua=True, foto_path=N
         y -= 20
         for key in keys:
             if key in data:
-                c.setFont("Helvetica-Bold", 12)
+                c.setFont("Calibri-Bold", 12)
                 c.drawString(60, y, f"{key}:")
-                c.setFont("Helvetica", 12)
+                c.setFont("Calibri", 12)
                 text_width = c.stringWidth(f"{key}: ", "Helvetica-Bold", 12)
                 c.drawString(60 + text_width + 10, y, f"{data[key]}")  # Espaçamento dinâmico antes do dado
                 y -= 20
                 if y < 40:
                     c.showPage()
-                    c.setFont("Helvetica", 12)
+                    c.setFont("Calibri", 12)
                     y = height - 40
         # Espaçamento após o nome do grupo
         y -= 20
@@ -117,7 +130,7 @@ def create_pdf(data, output_pdf_path, images, usar_marca_dagua=True, foto_path=N
             c.saveState()
             c.translate(width / 2, height / 2)
             c.rotate(45)  # Rotacionar a imagem 45 graus
-            logo_img_bytes = add_transparency('LogoChapaAmigo.png', 0.05)  # 100% de transparência
+            logo_img_bytes = add_transparency(os.path.join(os.path.dirname(__file__), 'Files', 'LogoChapaAmigo.png'), 0.05)  # 100% de transparência
             img = ImageReader(logo_img_bytes)
             c.drawImage(img, -250, -125, width=500, height=250, mask='auto')  # Centralizar a imagem
             c.restoreState()
@@ -130,7 +143,7 @@ def create_pdf(data, output_pdf_path, images, usar_marca_dagua=True, foto_path=N
     # Grupos de dados
     groups = {
         "CADASTROS BÁSICOS": [
-            "Data e Hora", "Nome", "Nascimento", "Idade", "Sexo", "Rg", "Cpf", "CNH", "Mãe", "Pai", "Óbito"
+            "Data e Hora", "Nome", "Nascimento", "Idade", "Sexo", "Rg", "Cpf", "CNH", "Mãe", "Pai", "Óbito", "Endereços"
         ],
         "RENDA": [
             "Renda Mensal Presumida"
@@ -167,18 +180,20 @@ def create_pdf(data, output_pdf_path, images, usar_marca_dagua=True, foto_path=N
             draw_group(group_title, group_keys)
 
     # Adicionar imagens ao PDF
-    for img_bytes in images:
-        c.showPage()
-        add_watermark()
-        cropped_img_bytes = crop_image(img_bytes)
-        img = ImageReader(cropped_img_bytes)
-        c.drawImage(img, 0, 0, width=width, height=height)
+    if incluir_documentos:
+        for img_bytes in images:
+            c.showPage()
+            add_watermark()
+            cropped_img_bytes = crop_image(img_bytes)
+            img = ImageReader(cropped_img_bytes)
+            c.drawImage(img, 0, 0, width=width, height=height)
     
     c.save()
 
 # Abre o arquivo PDF
 with open(input_pdf, 'rb') as file:
     reader = PyPDF2.PdfReader(file)
+    reader.decrypt(senha_pdf)
     num_pages = len(reader.pages)
 
     # Extrai o texto de cada página e escreve no arquivo de saída
@@ -194,22 +209,53 @@ extracted_data = extract_data_from_text('temp.txt')
 
 # Criar o PDF com nome específico e senha
 nome_pessoa = extracted_data.get("Nome", "Relatorio").replace(" ", "_")
-
-output_pdf_path = f"Relatorio_{nome_pessoa}.pdf"
+output_dir = os.path.join(os.path.dirname(__file__), 'Relatórios')
+os.makedirs(output_dir, exist_ok=True)
+output_pdf_path = os.path.join(output_dir, f"Relatorio_{nome_pessoa}.pdf")
 create_pdf(extracted_data, output_pdf_path, images, usar_marca_dagua, foto_path)
 
-# Adicionar senha ao PDF
-with open(output_pdf_path, 'rb') as f:
-    reader = PyPDF2.PdfReader(f)
-    writer = PyPDF2.PdfWriter()
+# Concatenar o documento TERMO_FICHA_CADASTRO_PDF.pdf se incluir_contrato for True
+if incluir_contrato:
+    termo_pdf_path = os.path.join(os.path.dirname(__file__), 'Files', 'TERMO_FICHA_CADASTRO_PDF.pdf')
+    with open(termo_pdf_path, 'rb') as termo_file, open(output_pdf_path, 'rb') as output_file:
+        termo_reader = PyPDF2.PdfReader(termo_file)
+        output_reader = PyPDF2.PdfReader(output_file)
+        writer = PyPDF2.PdfWriter()
 
-    for page in reader.pages:
-        writer.add_page(page)
+        # Definir as variáveis width e height
+        width, height = letter
 
-    # Definir a senha do PDF
-    writer.encrypt(user_password="1234", owner_password="1234", use_128bit=True)
+        # Ajustar o tamanho da primeira página concatenada
+        termo_page = termo_reader.pages[0]
+        termo_page.scale_to(width, height)
+        writer.add_page(termo_page)
 
-    with open(output_pdf_path, 'wb') as f_encrypted:
-        writer.write(f_encrypted)
+        # Adicionar páginas restantes do termo
+        for page in termo_reader.pages[1:]:
+            writer.add_page(page)
 
-print(f"PDF protegido gerado: {output_pdf_path} com senha: 1234")
+        # Adicionar páginas do relatório
+        for page in output_reader.pages:
+            writer.add_page(page)
+
+        # Definir a senha do PDF
+        writer.encrypt(user_password="1234", owner_password="1234", use_128bit=True)
+
+        with open(output_pdf_path, 'wb') as final_output_file:
+            writer.write(final_output_file)
+else:
+    # Se não incluir contrato, apenas adicionar a senha ao PDF gerado
+    with open(output_pdf_path, 'rb') as output_file:
+        output_reader = PyPDF2.PdfReader(output_file)
+        writer = PyPDF2.PdfWriter()
+
+        for page in output_reader.pages:
+            writer.add_page(page)
+
+        # Definir a senha do PDF
+        writer.encrypt(user_password="1234", owner_password="1234", use_128bit=True)
+
+        with open(output_pdf_path, 'wb') as final_output_file:
+            writer.write(final_output_file)
+
+print(f"PDF final protegido gerado: {output_pdf_path} com senha: 1234")

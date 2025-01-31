@@ -6,13 +6,14 @@ import subprocess
 import traceback
 import os
 import sys
+import encodings
 
 # Função para criar a caixa de diálogo com caixas de seleção
 def criar_caixa_selecao(titulo, opcoes):
     layout = [
         [sg.Checkbox(opcao, key=opcao, default=True)] for opcao in opcoes
     ] + [[sg.Button('OK')]]
-    janela = sg.Window(titulo, layout, size=(500, 400))  # Define a largura e altura da janela
+    janela = sg.Window(titulo, layout, size=(450, 450))  # Define a largura e altura da janela
     evento, valores = janela.read()
     janela.close()
     return valores
@@ -22,7 +23,7 @@ sg.theme('BlueMono')
 layout = [
     [
         sg.Image(
-            filename='./LogoChapaAmigo.png',
+            filename=os.path.join(os.path.dirname(__file__), 'Files', 'LogoChapaAmigo.png'),
             subsample=5
         ),
         sg.Column(
@@ -102,6 +103,8 @@ janela = sg.Window(
 
 # Variáveis para armazenar as opções de personalização
 usar_marca_dagua = True
+incluir_contrato = True
+incluir_documentos = True
 grupos_selecionados = {
     "CADASTROS BÁSICOS": True,
     "RENDA": True,
@@ -122,9 +125,11 @@ while True:
     if evento == sg.WIN_CLOSED:
         break
     elif evento == 'Personalizar':
-        opcoes = ['Usar Marca d\'água'] + list(grupos_selecionados.keys())  # Opções para marca d'água e grupos de dados
+        opcoes = ['Usar Marca d\'água', 'Contrato', 'Documentos'] + list(grupos_selecionados.keys())  # Opções para marca d'água, contrato, documentos e grupos de dados
         selecoes = criar_caixa_selecao('Personalizar Layout do Pdf', opcoes)
         usar_marca_dagua = selecoes.get('Usar Marca d\'água', True)
+        incluir_contrato = selecoes.get('Contrato', True)
+        incluir_documentos = selecoes.get('Documentos', True)
         for grupo in grupos_selecionados.keys():
             grupos_selecionados[grupo] = selecoes.get(grupo, True)
         print('Opções de Personalização:', selecoes)
@@ -137,16 +142,9 @@ while True:
         if arquivo:
             senha = '515608'  # Senha fixa
             try:
-                # Destravar o PDF e obter o conteúdo desbloqueado como BytesIO
-                output_pdf = destravar_pdf(arquivo, senha)
-                
-                # Salvar o conteúdo desbloqueado em um arquivo temporário
-                with open('desbloqueado.pdf', 'wb') as f:
-                    f.write(output_pdf.getbuffer())
-                
-                # Chamar o script Cache.py passando o arquivo PDF desbloqueado e as opções de personalização
+                # Chamar o script Cache.py passando o arquivo PDF original e as opções de personalização
                 cache_script_path = os.path.join(os.path.dirname(__file__), 'Cache.py')
-                subprocess.run([sys.executable, cache_script_path, 'desbloqueado.pdf', str(usar_marca_dagua), foto_path or ""] + [str(grupos_selecionados[grupo]) for grupo in grupos_selecionados], check=True)
+                subprocess.run([sys.executable, cache_script_path, arquivo, senha, str(usar_marca_dagua), foto_path or "", str(incluir_contrato), str(incluir_documentos)] + [str(grupos_selecionados[grupo]) for grupo in grupos_selecionados], check=True)
                   
                 # Extrair dados do temp.txt
                 extracted_data = extract_data_from_text('temp.txt')

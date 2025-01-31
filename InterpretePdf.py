@@ -1,4 +1,5 @@
 import re
+import encodings
 
 def extract_data_from_text(file_path):
     data = {}
@@ -30,7 +31,7 @@ def extract_data_from_text(file_path):
 
         #Sexo
         #CHECK
-        match = re.search(r"Sexo\s*([A-Z\s\-])", text)
+        match = re.search(r"Sexo\s*([A-Z\s\-]+)", text)
         data["Sexo"] = match.group(1) if match else "ERROR"
 
         #Rg
@@ -65,6 +66,10 @@ def extract_data_from_text(file_path):
         #CHECK
         match = re.search(r"Óbito\?\s*(\w+)", text)
         data["Óbito"] = match.group(1) if match else "ERROR"
+        
+        #Endereços
+        match = re.search(r"ENDEREÇOS\s*Prioridade\s*Tipo Endereço\s*Endereço Completo\s*\d+\s*-\s*(.*?)(?=\s*E-MAILS|$)", text, re.DOTALL)
+        data["Endereços"] = match.group(1).strip() if match else "ERROR"
 
         #RENDA
         
