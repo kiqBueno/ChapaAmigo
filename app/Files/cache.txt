@@ -1,0 +1,35 @@
+Data e Hora: 12/01/2025 - 09:37:04
+Nome: SERGIO JOSE DA SILVA OLIVEIRA
+Nascimento: 30/03/2004
+Idade: 20
+Sexo: M
+Rg: -
+Cpf: 399.518.798-61
+CNH: -
+Mãe: MARIA DAS DORES DE OLIVEIRA
+Pai: SEVERINO JOSE DA SILVA
+Óbito: NÃO
+Endereços: R ANTONIO AUGUSTO FILHO, 94, A BL 5 AP 3, VILA NO VA ALBA, SAO PAULO, SP, 05358-150
+Renda Mensal Presumida: 850
+Situação Cadastral: REGULAR
+Inscrito em: 11/10/2007
+Última Consulta: 12/01/2025 - 09:34:00
+CTPS: -
+Série: -
+Título de eleitor: -
+Passaporte: -
+País: -
+Validade: 11/07/2025
+Nis (pis/pasep): -
+Nis - outros: -
+Cns: 701201091532711
+Cns - outros: 801440413963913
+Inscrição social: -
+Quantidade de Pagamentos: 0
+Valor Total dos Pagamentos: 0,00
+Valor total recebido como beneficiário: 0
+Valor total recebido como responsável: 0
+Valor total recebido como benef./resp.: 0
+Primeira ocorrência: -
+Última ocorrência: -
+Número: ['(11) 96209-1506']
