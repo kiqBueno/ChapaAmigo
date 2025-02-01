@@ -1,7 +1,12 @@
+import logging
 from PyPDF2 import PdfReader, PdfWriter
 from io import BytesIO
 
+# Configurar o logger
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 def destravar_pdf(input_pdf, senha='515608'):
+    logging.info(f"Destravando PDF: {input_pdf}")
     try:
         # Carregar e desbloquear o PDF
         reader = PdfReader(input_pdf)
@@ -17,7 +22,8 @@ def destravar_pdf(input_pdf, senha='515608'):
         writer.write(output_pdf)
         output_pdf.seek(0)  # Voltar ao início do BytesIO
 
-        print("PDF desbloqueado com sucesso")
+        logging.info("PDF desbloqueado com sucesso")
         return output_pdf
     except Exception as e:
+        logging.error(f"Falha ao desbloquear o PDF: {e}")
         raise Exception(f"Falha ao desbloquear o PDF: {e}")

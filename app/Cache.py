@@ -1,6 +1,5 @@
 import PyPDF2
 import fitz  # PyMuPDF
-import sys
 import os
 from io import BytesIO
 from reportlab.lib.pagesizes import letter
@@ -12,34 +11,14 @@ from PIL import Image
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
 import encodings
+import logging
 
-# Verifica se o nome do arquivo foi passado como argumento
-if len(sys.argv) < 17:
-    print("Uso: python Cache.py <arquivo_pdf> <senha_pdf> <usar_marca_dagua> <foto_path> <incluir_contrato> <incluir_documentos> <CADASTROS BÁSICOS> <RENDA> <HISTÓRICO DA RECEITA FEDERAL> <DADOS DA CTPS> <TITULO ELEITORAL> <DADOS DO PASSAPORTE> <DADOS SOCIAIS> <CELULARES E TELEFONES FIXO> <PAGAMENTOS DO BENEFÍCIO DE PRESTAÇÃO CONTINUada> <AUXÍLIO EMERGENCIAL>")
-    sys.exit(1)
-
-input_pdf = sys.argv[1]
-senha_pdf = sys.argv[2]
-usar_marca_dagua = sys.argv[3].lower() == 'true'
-foto_path = sys.argv[4] if sys.argv[4] else None
-incluir_contrato = sys.argv[5].lower() == 'true'
-incluir_documentos = sys.argv[6].lower() == 'true'
-
-grupos_selecionados = {
-    "CADASTROS BÁSICOS": sys.argv[7].lower() == 'true',
-    "RENDA": sys.argv[8].lower() == 'true',
-    "HISTÓRICO DA RECEITA FEDERAL": sys.argv[9].lower() == 'true',
-    "DADOS DA CTPS": sys.argv[10].lower() == 'true',
-    "TITULO ELEITORAL": sys.argv[11].lower() == 'true',
-    "DADOS DO PASSAPORTE": sys.argv[12].lower() == 'true',
-    "DADOS SOCIAIS": sys.argv[13].lower() == 'true',
-    "CELULARES E TELEFONES FIXO": sys.argv[14].lower() == 'true',
-    "PAGAMENTOS DO BENEFÍCIO DE PRESTAÇÃO CONTINUADA": sys.argv[15].lower() == 'true',
-    "AUXÍLIO EMERGENCIAL": sys.argv[16].lower() == 'true',
-}
+# Configurar o logger
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Função para identificar páginas específicas e salvar como imagem
 def save_specific_pages_as_images(pdf_path, senha_pdf):
+    logging.info("Salvando páginas específicas como imagens")
     doc = fitz.open(pdf_path)
     if doc.needs_pass:
         doc.authenticate(senha_pdf)
@@ -58,6 +37,7 @@ def save_specific_pages_as_images(pdf_path, senha_pdf):
 
 # Função para cortar 10% das imagens em cima e em baixo
 def crop_image(img_bytes):
+    logging.info("Cortando imagem")
     img = Image.open(img_bytes)
     width, height = img.size
     crop_height = int(height * 0.09)
@@ -67,11 +47,9 @@ def crop_image(img_bytes):
     cropped_img_bytes.seek(0)
     return cropped_img_bytes
 
-# Salvar páginas específicas como imagens
-images = save_specific_pages_as_images(input_pdf, senha_pdf)
-
 # Função para adicionar transparência à imagem
 def add_transparency(image_path, transparency):
+    logging.info("Adicionando transparência à imagem")
     img = Image.open(image_path).convert("RGBA")
     alpha = img.split()[3]
     alpha = alpha.point(lambda p: p * transparency)
@@ -82,7 +60,8 @@ def add_transparency(image_path, transparency):
     return img_bytes
 
 # Função para criar um PDF com as informações extraídas e adicionar imagens
-def create_pdf(data, output_pdf_path, images, usar_marca_dagua=True, foto_path=None):
+def create_pdf(data, output_pdf_path, images, usar_marca_dagua=True, foto_path=None, incluir_contrato=False, incluir_documentos=False, grupos_selecionados=None):
+    logging.info(f"Criando PDF: {output_pdf_path}")
     c = canvas.Canvas(output_pdf_path, pagesize=letter)
     width, height = letter
     pdfmetrics.registerFont(TTFont('Calibri', 'calibri.ttf'))
@@ -155,7 +134,7 @@ def create_pdf(data, output_pdf_path, images, usar_marca_dagua=True, foto_path=N
     }
 
     for group_title, group_keys in groups.items():
-        if grupos_selecionados[group_title]:
+        if grupos_selecionados and grupos_selecionados.get(group_title, False):
             add_watermark()
             draw_group(group_title, group_keys)
 
@@ -168,60 +147,3 @@ def create_pdf(data, output_pdf_path, images, usar_marca_dagua=True, foto_path=N
             c.drawImage(img, 0, 0, width=width, height=height)
     
     c.save()
-
-# Abre o arquivo PDF
-with open(input_pdf, 'rb') as file:
-    reader = PyPDF2.PdfReader(file)
-    reader.decrypt(senha_pdf)
-    num_pages = len(reader.pages)
-
-    # Extrai o texto de cada página e escreve no arquivo de saída
-    with open(os.path.join(os.path.dirname(__file__), 'Files', 'temp.txt'), 'w', encoding='utf-8') as output_file:
-        for page_num in range(num_pages):
-            page = reader.pages[page_num]
-            text = page.extract_text()
-            output_file.write(f"Page {page_num + 1}:\n{text}\n\n")
-
-# Add the parent directory to sys.path
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-
-# Extrair dados do temp.txt
-from app.InterpretePdf import extract_data_from_text
-extracted_data = extract_data_from_text(os.path.join(os.path.dirname(__file__), 'Files', 'temp.txt'))
-
-# Criar o PDF com nome específico e senha
-nome_pessoa = extracted_data.get("Nome", "Relatorio").replace(" ", "_")
-output_dir = os.path.join(os.path.dirname(__file__), 'Relatórios')
-os.makedirs(output_dir, exist_ok=True)
-output_pdf_path = os.path.join(output_dir, f"Relatorio_{nome_pessoa}.pdf")
-create_pdf(extracted_data, output_pdf_path, images, usar_marca_dagua, foto_path)
-
-# Concatenar o documento TERMO_FICHA_CADASTRO_PDF.pdf se incluir_contrato for True
-if incluir_contrato:
-    termo_pdf_path = os.path.join(os.path.dirname(__file__), 'Files', 'TERMO_FICHA_CADASTRO_PDF.pdf')
-    with open(termo_pdf_path, 'rb') as termo_file, open(output_pdf_path, 'rb') as output_file:
-        termo_reader = PyPDF2.PdfReader(termo_file)
-        output_reader = PyPDF2.PdfReader(output_file)
-        writer = PyPDF2.PdfWriter()
-        width, height = letter
-        termo_page = termo_reader.pages[0]
-        termo_page.scale_to(width, height)
-        writer.add_page(termo_page)
-        for page in termo_reader.pages[1:]:
-            writer.add_page(page)
-        for page in output_reader.pages:
-            writer.add_page(page)
-        writer.encrypt(user_password="1234", owner_password="1234", use_128bit=True)
-        with open(output_pdf_path, 'wb') as final_output_file:
-            writer.write(final_output_file)
-else:
-    with open(output_pdf_path, 'rb') as output_file:
-        output_reader = PyPDF2.PdfReader(output_file)
-        writer = PyPDF2.PdfWriter()
-        for page in output_reader.pages:
-            writer.add_page(page)
-        writer.encrypt(user_password="1234", owner_password="1234", use_128bit=True)
-        with open(output_pdf_path, 'wb') as final_output_file:
-            writer.write(final_output_file)
-
-print(f"PDF final protegido gerado: {output_pdf_path} com senha: 1234")

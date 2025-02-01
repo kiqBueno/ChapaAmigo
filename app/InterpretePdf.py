@@ -1,6 +1,11 @@
 import re
+import logging
+
+# Configurar o logger
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def extract_data_from_text(file_path):
+    logging.info(f"Extraindo dados do arquivo: {file_path}")
     data = {}
     with open(file_path, 'r', encoding='utf-8') as file:
         text = file.read()
@@ -53,4 +58,5 @@ def extract_data_from_text(file_path):
         match = re.findall(r"\(\d{2}\) \d{4,5}-\d{4}", text)
         data["Número"] = match if match else "-"
 
+    logging.info("Dados extraídos com sucesso")
     return data
