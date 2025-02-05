@@ -1,14 +1,20 @@
 import re
 import logging
+import PyPDF2
 
 # Configurar o logger
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def extract_data_from_text(file_path):
+def extract_data_from_pdf(file_path, senha='515608'):
     logging.info(f"Extraindo dados do arquivo: {file_path}")
     data = {}
-    with open(file_path, 'r', encoding='utf-8') as file:
-        text = file.read()
+    with open(file_path, 'rb') as file:
+        reader = PyPDF2.PdfReader(file)
+        if reader.is_encrypted:
+            reader.decrypt(senha)
+        text = ""
+        for page in reader.pages:
+            text += page.extract_text()
 
         def extract(pattern, key, default="ERROR"):
             match = re.search(pattern, text)

@@ -2,7 +2,7 @@
 import PyPDF2
 from PySimpleGUI import PySimpleGUI as sg
 from DestravarPdf import destravar_pdf
-from InterpretePdf import extract_data_from_text
+from InterpretePdf import extract_data_from_pdf
 import traceback
 import os
 import sys
@@ -93,7 +93,7 @@ while True:
             senha = '515608'
             try:
                 # Extrair dados do PDF
-                extracted_data = extract_data_from_text(os.path.join(os.path.dirname(__file__), 'Files', 'temp.txt'))
+                extracted_data = extract_data_from_pdf(arquivo, senha)
                 with open(os.path.join(os.path.dirname(__file__), 'Files', 'cache.txt'), 'w', encoding='utf-8') as output_file:
                     for key, value in extracted_data.items():
                         output_file.write(f"{key}: {value}\n")
