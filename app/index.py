@@ -13,7 +13,7 @@ from reportlab.lib.pagesizes import letter
 # Função para criar a caixa de diálogo com caixas de seleção
 def criar_caixa_selecao(titulo, opcoes):
     layout = [[sg.Checkbox(opcao, key=opcao, default=True)] for opcao in opcoes] + [[sg.Button('OK')]]
-    janela = sg.Window(titulo, layout, size=(450, 450))
+    janela = sg.Window(titulo, layout, size=(450, 475))
     evento, valores = janela.read()
     janela.close()
     return valores
@@ -44,7 +44,7 @@ layout = [
     ],
     [sg.VPush()],
     [
-        sg.Column([[sg.Text('Versão: 1.0')]], justification='center', element_justification='center', expand_x=True)
+        sg.Column([[sg.Text('Versão: 1.1')]], justification='center', element_justification='center', expand_x=True)
     ]
 ]
 
@@ -65,7 +65,8 @@ grupos_selecionados = {
     "DADOS SOCIAIS": True,
     "CELULARES E TELEFONES FIXO": True,
     "PAGAMENTOS DO BENEFÍCIO DE PRESTAÇÃO CONTINUADA": True,
-    "AUXÍLIO EMERGENCIAL": True
+    "AUXÍLIO EMERGENCIAL": True,
+    "PROCESSOS": True
 }
 foto_path = None
 

@@ -1,18 +1,18 @@
-Data e Hora: 12/01/2025 - 09:37:04
-Nome: SERGIO JOSE DA SILVA OLIVEIRA
-Nascimento: 30/03/2004
-Idade: 20
+Data e Hora: 12/01/2025 - 09:37:02
+Nome: JOSE ERISON CLAUDIO FERREIRA DE ARAUJO
+Nascimento: 13/05/1992
+Idade: 32
 Sexo: M
-Rg: -
-Cpf: 399.518.798-61
+Rg: 8836893
+Cpf: 104.405.234-19
 CNH: -
-Mãe: MARIA DAS DORES DE OLIVEIRA
-Pai: SEVERINO JOSE DA SILVA
+Mãe: CICERA CLAUDIO DE ARAUJO
+Pai: NILSON FERREIRA DE ARAUJO
 Óbito: NÃO
-Endereços: R ANTONIO AUGUSTO FILHO, 94, A BL 5 AP 3, VILA NO VA ALBA, SAO PAULO, SP, 05358-150
-Renda Mensal Presumida: 850
+Endereços: RUA IBIACA, 72, CIDADE INDUSTRIAL SATELITE DE SAO  PAULO, 07231-090
+Renda Mensal Presumida: 1.500
 Situação Cadastral: REGULAR
-Inscrito em: 11/10/2007
+Inscrito em: 06/01/2010
 Última Consulta: 12/01/2025 - 09:34:00
 CTPS: -
 Série: -
@@ -22,8 +22,8 @@ País: -
 Validade: 11/07/2025
 Nis (pis/pasep): -
 Nis - outros: -
-Cns: 701201091532711
-Cns - outros: 801440413963913
+Cns: 700509981093750
+Cns - outros: 898004024753799
 Inscrição social: -
 Quantidade de Pagamentos: 0
 Valor Total dos Pagamentos: 0,00
@@ -32,4 +32,25 @@ Valor total recebido como responsável: 0
 Valor total recebido como benef./resp.: 0
 Primeira ocorrência: -
 Última ocorrência: -
-Número: ['(11) 96209-1506']
+Total de Processos: 4
+Como Requerente: 4
+Como Requerido: 0
+Como Outra Parte: 0
+Nos Últimos 30 Dias: 1
+Nos Últimos 90 Dias: 0
+Nos Últimos 180 Dias: 1
+Nos Últimos 365 Dias: 1
+Número do Processo: ['10021616620245020317', '10015527720245020319', '10004112020245020320', '10013131020235020610']
+Tipo: ['RITO SUMARISSIMO', 'RITO ORDINARIO', 'RITO SUMARISSIMO', 'RITO ORDINARIO']
+Status: ['DISTRIBUIDO', 'DISTRIBUIDO', '-', 'ARQUIVADO']
+Papel: ['REQUERENTE', 'REQUERENTE', 'REQUERENTE', 'REQUERENTE']
+Valor da Causa: ['20.763,13', '68.729,68', '28.060,37', '59.708,20']
+Envolvidos: ['8', '7', '5', '6']
+Assunto: ['ADICIONAL DE INSALUBRIDADE', 'RECONHECIMENTO DE RELACAO DE EMPREGO', 'ADICIONAL DE INSALUBRIDADE', 'ADICIONAL DE HORA EXTRA']
+Tribunal: ['TRT2 - 1 / TRABALHISTA / GUARULHOS', 'TRT2 - 1 / TRABALHISTA / GUARULHOS', 'TRT2 - 1 / TRABALHISTA / GUARULHOS', 'TRT2 - 1 / TRABALHISTA / SAO PAULO']
+Data de Abertura: ['17/12/24', '19/09/24', '19/03/24', '08/07/23']
+Idade em Dias: ['26', '114', '298', '368']
+Data de Encerramento: ['-', '-', '-', '11/07/24']
+Última Atualização: ['06/01/25', '23/09/24', '15/07/24', '10/09/24']
+Última Movimentação: ['19/12/24', '20/09/24', '12/07/24', '11/07/24']
+Número: ['(11) 96741-2850', '(11) 2496-1141', '(11) 2038-8777']

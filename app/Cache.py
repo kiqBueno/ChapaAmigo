@@ -74,34 +74,98 @@ def create_pdf(data, output_pdf_path, images, usar_marca_dagua=True, foto_path=N
         y -= 20
         c.drawString(40, y, title)
         y -= 20
-        for key in keys:
-            if key in data:
-                c.setFont("Calibri-Bold", 12)
-                c.drawString(60, y, f"{key}:")
-                c.setFont("Calibri", 12)
-                text_width = c.stringWidth(f"{key}: ", "Helvetica-Bold", 12)
-                text = data[key]
-                if isinstance(text, list):
-                    text = " ".join(text)
-                lines = []
-                while text:
-                    if c.stringWidth(text, "Calibri", 12) <= width - 80 - text_width:
-                        lines.append(text)
-                        break
-                    else:
-                        for i in range(len(text), 0, -1):
-                            if c.stringWidth(text[:i], "Calibri", 12) <= width - 80 - text_width:
-                                lines.append(text[:i])
-                                text = text[i:].lstrip()
-                                break
-                for line in lines:
-                    c.drawString(60 + text_width + 10, y, line)
-                    y -= 20
-                    if y < 40:
-                        c.showPage()
+        if title == "PROCESSOS":
+            single_occurrence_keys = [
+                "Total de Processos", "Como Requerente", "Como Requerido", "Como Outra Parte",
+                "Nos Últimos 30 Dias", "Nos Últimos 90 Dias", "Nos Últimos 180 Dias", "Nos Últimos 365 Dias"
+            ]
+            for key in single_occurrence_keys:
+                if key in data:
+                    c.setFont("Calibri-Bold", 12)
+                    c.drawString(60, y, f"{key}:")
+                    c.setFont("Calibri", 12)
+                    text_width = c.stringWidth(f"{key}: ", "Helvetica-Bold", 12)
+                    text = str(data[key]) if data[key] is not None else ''
+                    lines = []
+                    while text:
+                        if c.stringWidth(text, "Calibri", 12) <= width - 80 - text_width:
+                            lines.append(text)
+                            break
+                        else:
+                            for j in range(len(text), 0, -1):
+                                if c.stringWidth(text[:j], "Calibri", 12) <= width - 80 - text_width:
+                                    lines.append(text[:j])
+                                    text = text[j:].lstrip()
+                                    break
+                    for line in lines:
+                        c.drawString(60 + text_width + 10, y, line)
+                        y -= 20
+                        if y < 40:
+                            c.showPage()
+                            c.setFont("Calibri", 12)
+                            y = height - 40
+            y -= 20
+
+            max_length = max(len(data[key]) for key in keys if key in data and isinstance(data[key], list))
+            for i in range(max_length):
+                for key in keys:
+                    if key in data and isinstance(data[key], list) and i < len(data[key]):
+                        c.setFont("Calibri-Bold", 12)
+                        c.drawString(60, y, f"{key}:")
                         c.setFont("Calibri", 12)
-                        y = height - 40
-        y -= 20
+                        text_width = c.stringWidth(f"{key}: ", "Helvetica-Bold", 12)
+                        text = str(data[key][i]) if data[key][i] is not None else ''
+                        lines = []
+                        while text:
+                            if c.stringWidth(text, "Calibri", 12) <= width - 80 - text_width:
+                                lines.append(text)
+                                break
+                            else:
+                                for j in range(len(text), 0, -1):
+                                    if c.stringWidth(text[:j], "Calibri", 12) <= width - 80 - text_width:
+                                        lines.append(text[:j])
+                                        text = text[j:].lstrip()
+                                        break
+                        for line in lines:
+                            c.drawString(60 + text_width + 10, y, line)
+                            y -= 20
+                            if y < 40:
+                                c.showPage()
+                                c.setFont("Calibri", 12)
+                                y = height - 40
+                y -= 20
+        else:
+            for key in keys:
+                if key in data:
+                    c.setFont("Calibri-Bold", 12)
+                    c.drawString(60, y, f"{key}:")
+                    c.setFont("Calibri", 12)
+                    text_width = c.stringWidth(f"{key}: ", "Helvetica-Bold", 12)
+                    text = data[key]
+                    if isinstance(text, list):
+                        text = [str(item) if item is not None else '' for item in text]
+                        text = " ".join(text)
+                    else:
+                        text = str(text) if text is not None else ''
+                    lines = []
+                    while text:
+                        if c.stringWidth(text, "Calibri", 12) <= width - 80 - text_width:
+                            lines.append(text)
+                            break
+                        else:
+                            for i in range(len(text), 0, -1):
+                                if c.stringWidth(text[:i], "Calibri", 12) <= width - 80 - text_width:
+                                    lines.append(text[:i])
+                                    text = text[i:].lstrip()
+                                    break
+                    for line in lines:
+                        c.drawString(60 + text_width + 10, y, line)
+                        y -= 20
+                        if y < 40:
+                            c.showPage()
+                            c.setFont("Calibri", 12)
+                            y = height - 40
+            y -= 20
 
     def add_watermark():
         if usar_marca_dagua:
@@ -130,7 +194,8 @@ def create_pdf(data, output_pdf_path, images, usar_marca_dagua=True, foto_path=N
         "DADOS SOCIAIS": ["Nis (pis/pasep)", "Nis - outros", "Cns", "Cns - outros", "Inscrição social"],
         "CELULARES E TELEFONES FIXO": ["Número"],
         "PAGAMENTOS DO BENEFÍCIO DE PRESTAÇÃO CONTINUADA": ["Quantidade de Pagamentos", "Valor Total dos Pagamentos"],
-        "AUXÍLIO EMERGENCIAL": ["Valor total recebido como beneficiário", "Valor total recebido como responsável", "Valor total recebido como benef./resp."]
+        "AUXÍLIO EMERGENCIAL": ["Valor total recebido como beneficiário", "Valor total recebido como responsável", "Valor total recebido como benef./resp."],
+        "PROCESSOS": ["Número do Processo", "Tipo", "Status", "Papel", "Valor da Causa", "Envolvidos", "Assunto", "Tribunal", "Data de Abertura", "Idade em Dias", "Última Atualização", "Data de Encerramento", "Última Movimentação"]
     }
 
     for group_title, group_keys in groups.items():

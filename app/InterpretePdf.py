@@ -1,6 +1,7 @@
 import re
 import logging
 import PyPDF2
+import os
 
 # Configurar o logger
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -16,9 +17,18 @@ def extract_data_from_pdf(file_path, senha='515608'):
         for page in reader.pages:
             text += page.extract_text()
 
-        def extract(pattern, key, default="ERROR"):
-            match = re.search(pattern, text)
-            data[key] = match.group(1).strip() if match else default
+        # Write the extracted text to a file
+        output_file_path = os.path.join(os.path.dirname(__file__), 'Files', 'temp.txt')
+        with open(output_file_path, 'w', encoding='utf-8') as output_file:
+            output_file.write(text)
+
+        def extract(pattern, key, default="ERROR", multiple=False):
+            if multiple:
+                matches = re.findall(pattern, text)
+                data[key] = [match.replace('\n', ' ').strip() if isinstance(match, str) else match[0].replace('\n', ' ').strip() for match in matches] if matches else [default]
+            else:
+                match = re.search(pattern, text)
+                data[key] = match.group(1).replace('\n', ' ').strip() if match else default
 
         # CADASTROS BÁSICOS
         fields = [
@@ -26,7 +36,7 @@ def extract_data_from_pdf(file_path, senha='515608'):
             (r"Nome:\s*([A-Z\s]+)(?=\s*CPF|$)", "Nome"),
             (r"Nascimento\s*(\d{2}/\d{2}/\d{4})", "Nascimento"),
             (r"Idade\s*(\d+)", "Idade"),
-            (r"Sexo\s*([A-Z\s\-]+)(?=\s*Signo|$)", "Sexo"),
+            (r"Sexo\s*([A-Za-z\-]+)(?=\s*Signo|$)", "Sexo"),
             (r"RG\s*([\d]+)", "Rg", "-"),
             (r"CPF\s*([\d\.\-]+)", "Cpf"),
             (r"DADOS DA CNH\s*CNH\s*([\w\-]*)", "CNH"),
@@ -55,7 +65,30 @@ def extract_data_from_pdf(file_path, senha='515608'):
             (r"Valor total recebido como\s*responsável\s*R\$\s*([\d,.]+)", "Valor total recebido como responsável", "0"),
             (r"Valor total recebido como\s*benef./resp.\s*R\$\s*([\d,.]+)", "Valor total recebido como benef./resp.", "0"),
             (r"Primeira ocorrência\s*([a-z]{3}/\d{4})", "Primeira ocorrência", "-"),
-            (r"Última ocorrência\s*([a-z]{3}/\d{4})", "Última ocorrência", "-")
+            (r"Última ocorrência\s*([a-z]{3}/\d{4})", "Última ocorrência", "-"),
+            
+            # Novos campos para versao 1.1
+            (r"Total de Processos\s*(\d+)", "Total de Processos"),
+            (r"Como Requerente\s*(\d+)", "Como Requerente"),
+            (r"Como Requerido\s*(\d+)", "Como Requerido"),
+            (r"Como Outra Parte\s*(\d+)", "Como Outra Parte"),
+            (r"Nos Últimos 30 Dias\s*(\d+)", "Nos Últimos 30 Dias"),
+            (r"Nos Últimos 90 Dias\s*(\d+)", "Nos Últimos 90 Dias"),
+            (r"Nos Últimos 180 Dias\s*(\d+)", "Nos Últimos 180 Dias"),
+            (r"Nos Últimos 365 Dias\s*(\d+)", "Nos Últimos 365 Dias"),
+            (r"(\d{20}|(?:\d{7}-\d{2}\.\d{4}\.\d{1,2}\.\d{2}\.\d{4}))", "Número do Processo", None, True),
+            (r"Tipo\s*([A-Z\s]+)(?=\s*Status)", "Tipo", None, True),
+            (r"Status\s*([A-Z\s\-]+)(?=\s*Papel)", "Status", None, True),
+            (r"Papel\s*([A-Z\s]+)(?=\s*Valor)", "Papel", None, True),
+            (r"Valor da Causa\s*(?:R\$)?\s*([\d,.]+|-)", "Valor da Causa", None, True),
+            (r"Envolvidos\s*(\d+)", "Envolvidos", None, True),
+            (r"Assunto\s*([\w\s\-\–\/\|]+)(?=\s*Tribunal|,)", "Assunto", None, True),
+            (r"Tribunal\s*([\w\s\(\)\-\/]+ - [\w\s\/]+|TJ\w+ \/ [\w\s]+)(?=\s*Data|Relatório)", "Tribunal", None, True),
+            (r"Data Abertura\s*(\d{2}/\d{2}/\d{2}|-)", "Data de Abertura", None, True),
+            (r"Idade\s*(\d+|-)\s*(?=\s*dia|Assunto)", "Idade em Dias", None, True),
+            (r"Data Encerramento\s*((?:\d{2}/\d{2}/\d{2}|-)+)", "Data de Encerramento", None, True),
+            (r"Últ\. Atualização\s*(\d{2}/\d{2}/\d{2})", "Última Atualização", None, True),
+            (r"Últ\. Movimentação\s*(\d{2}/\d{2}/\d{2}|-)", "Última Movimentação", None, True),
         ]
 
         for pattern, key, *default in fields:
