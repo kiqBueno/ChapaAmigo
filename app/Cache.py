@@ -1,24 +1,22 @@
-import PyPDF2
-import fitz  # PyMuPDF
 import os
+import logging
 from io import BytesIO
+from PIL import Image
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
-from reportlab.pdfgen.canvas import Canvas
-from reportlab.lib.colors import Color
-from PIL import Image
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
-import encodings
-import logging
+import fitz  # PyMuPDF
 
-# Configurar o logger
+# Configure logger
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Função para identificar páginas específicas e salvar como imagem
 def save_specific_pages_as_images(pdf_path, senha_pdf):
-    logging.info("Salvando páginas específicas como imagens")
+    """
+    Extract specific pages from a PDF containing certain keywords and save them as images in memory.
+    """
+    logging.info("Saving specific pages as images")
     doc = fitz.open(pdf_path)
     if doc.needs_pass:
         doc.authenticate(senha_pdf)
@@ -27,17 +25,18 @@ def save_specific_pages_as_images(pdf_path, senha_pdf):
     for page_num in range(len(doc)):
         page = doc.load_page(page_num)
         text = page.get_text()
-        for keyword in keywords:
-            if keyword in text:
-                pix = page.get_pixmap(dpi=300)
-                img_bytes = BytesIO(pix.tobytes())
-                images.append(img_bytes)
-                print(f"Saved page {page_num + 1} as image in memory")
+        if any(keyword in text for keyword in keywords):
+            pix = page.get_pixmap(dpi=300)
+            img_bytes = BytesIO(pix.tobytes())
+            images.append(img_bytes)
+            logging.info(f"Saved page {page_num + 1} as image in memory")
     return images
 
-# Função para cortar 10% das imagens em cima e em baixo
 def crop_image(img_bytes):
-    logging.info("Cortando imagem")
+    """
+    Crop 10% from the top and bottom of an image.
+    """
+    logging.info("Cropping image")
     img = Image.open(img_bytes)
     width, height = img.size
     crop_height = int(height * 0.09)
@@ -47,9 +46,11 @@ def crop_image(img_bytes):
     cropped_img_bytes.seek(0)
     return cropped_img_bytes
 
-# Função para adicionar transparência à imagem
 def add_transparency(image_path, transparency):
-    logging.info("Adicionando transparência à imagem")
+    """
+    Add transparency to an image.
+    """
+    logging.info("Adding transparency to image")
     img = Image.open(image_path).convert("RGBA")
     alpha = img.split()[3]
     alpha = alpha.point(lambda p: p * transparency)
@@ -59,9 +60,11 @@ def add_transparency(image_path, transparency):
     img_bytes.seek(0)
     return img_bytes
 
-# Função para criar um PDF com as informações extraídas e adicionar imagens
 def create_pdf(data, output_pdf_path, images, usar_marca_dagua=True, foto_path=None, incluir_contrato=False, incluir_documentos=False, grupos_selecionados=None):
-    logging.info(f"Criando PDF: {output_pdf_path}")
+    """
+    Create a PDF with extracted data and optional images, watermark, and customization.
+    """
+    logging.info(f"Creating PDF: {output_pdf_path}")
     c = canvas.Canvas(output_pdf_path, pagesize=letter)
     width, height = letter
     pdfmetrics.registerFont(TTFont('Calibri', 'calibri.ttf'))
@@ -182,7 +185,7 @@ def create_pdf(data, output_pdf_path, images, usar_marca_dagua=True, foto_path=N
             img = ImageReader(foto_path)
             c.drawImage(img, width - 150, height - 200, width=100, height=150)
         except Exception as e:
-            print(f"Erro ao carregar a imagem: {e}")
+            logging.error(f"Error loading image: {e}")
 
     groups = {
         "CADASTROS BÁSICOS": ["Data e Hora", "Nome", "Nascimento", "Idade", "Sexo", "Rg", "Cpf", "CNH", "Mãe", "Pai", "Óbito", "Endereços"],

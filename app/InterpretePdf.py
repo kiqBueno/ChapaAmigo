@@ -1,23 +1,23 @@
 import re
 import logging
-import PyPDF2
 import os
+from PyPDF2 import PdfReader
 
-# Configurar o logger
+# Configure logger
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def extract_data_from_pdf(file_path, senha='515608'):
-    logging.info(f"Extraindo dados do arquivo: {file_path}")
+    """
+    Extract structured data from a PDF file based on predefined patterns.
+    """
+    logging.info(f"Extracting data from file: {file_path}")
     data = {}
     with open(file_path, 'rb') as file:
-        reader = PyPDF2.PdfReader(file)
+        reader = PdfReader(file)
         if reader.is_encrypted:
             reader.decrypt(senha)
-        text = ""
-        for page in reader.pages:
-            text += page.extract_text()
+        text = "".join(page.extract_text() for page in reader.pages)
 
-        # Write the extracted text to a file
         output_file_path = os.path.join(os.path.dirname(__file__), 'Files', 'temp.txt')
         with open(output_file_path, 'w', encoding='utf-8') as output_file:
             output_file.write(text)
@@ -30,7 +30,6 @@ def extract_data_from_pdf(file_path, senha='515608'):
                 match = re.search(pattern, text)
                 data[key] = match.group(1).replace('\n', ' ').strip() if match else default
 
-        # CADASTROS BÁSICOS
         fields = [
             (r"(\d{2}/\d{2}/\d{4} - \d{2}:\d{2}:\d{2})", "Data e Hora"),
             (r"Nome:\s*([A-Z\s]+)(?=\s*CPF|$)", "Nome"),
@@ -97,5 +96,5 @@ def extract_data_from_pdf(file_path, senha='515608'):
         match = re.findall(r"\(\d{2}\) \d{4,5}-\d{4}", text)
         data["Número"] = match if match else "-"
 
-    logging.info("Dados extraídos com sucesso")
+    logging.info("Data extracted successfully")
     return data
