@@ -5,24 +5,24 @@ from io import BytesIO
 # Configure logger
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def destravar_pdf(input_pdf, senha='515608'):
+def destravarPdf(inputPdf, password='515608'):
     """
     Unlock a password-protected PDF and return it as a BytesIO object.
     """
-    logging.info(f"Unlocking PDF: {input_pdf}")
+    logging.info(f"Unlocking PDF: {inputPdf}")
     try:
-        reader = PdfReader(input_pdf)
-        reader.decrypt(senha)
+        reader = PdfReader(inputPdf)
+        reader.decrypt(password)
 
         writer = PdfWriter()
         for page in reader.pages:
             writer.add_page(page)
 
-        output_pdf = BytesIO()
-        writer.write(output_pdf)
-        output_pdf.seek(0)
+        outputPdf = BytesIO()
+        writer.write(outputPdf)
+        outputPdf.seek(0)
         logging.info("PDF unlocked successfully")
-        return output_pdf
+        return outputPdf
     except Exception as e:
         logging.error(f"Failed to unlock PDF: {e}")
         raise

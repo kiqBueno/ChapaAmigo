@@ -6,21 +6,21 @@ from PyPDF2 import PdfReader
 # Configure logger
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def extract_data_from_pdf(file_path, senha='515608'):
+def extractDataFromPdf(filePath, password='515608'):
     """
     Extract structured data from a PDF file based on predefined patterns.
     """
-    logging.info(f"Extracting data from file: {file_path}")
+    logging.info(f"Extracting data from file: {filePath}")
     data = {}
-    with open(file_path, 'rb') as file:
+    with open(filePath, 'rb') as file:
         reader = PdfReader(file)
         if reader.is_encrypted:
-            reader.decrypt(senha)
+            reader.decrypt(password)
         text = "".join(page.extract_text() for page in reader.pages)
 
-        output_file_path = os.path.join(os.path.dirname(__file__), 'Files', 'temp.txt')
-        with open(output_file_path, 'w', encoding='utf-8') as output_file:
-            output_file.write(text)
+        outputFilePath = os.path.join(os.path.dirname(__file__), 'Files', 'temp.txt')
+        with open(outputFilePath, 'w', encoding='utf-8') as outputFile:
+            outputFile.write(text)
 
         def extract(pattern, key, default="ERROR", multiple=False):
             if multiple:
@@ -66,7 +66,6 @@ def extract_data_from_pdf(file_path, senha='515608'):
             (r"Primeira ocorrência\s*([a-z]{3}/\d{4})", "Primeira ocorrência", "-"),
             (r"Última ocorrência\s*([a-z]{3}/\d{4})", "Última ocorrência", "-"),
             
-            # Novos campos para versao 1.1
             (r"Total de Processos\s*(\d+)", "Total de Processos"),
             (r"Como Requerente\s*(\d+)", "Como Requerente"),
             (r"Como Requerido\s*(\d+)", "Como Requerido"),
